@@ -1,13 +1,29 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/julienschmidt/httprouter"
+)
 
 func main() {
-	http.ListenAndServe(":3000", Handler{})
+	router := httprouter.New()
+
+	router.GET("/", index)
+	router.GET("/:name", index)
+
+	server := &http.Server{
+		Addr:    ":3000",
+		Handler: router,
+	}
+
+	server.ListenAndServe()
 }
 
-type Handler struct{}
-
-func (Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func index(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	if p.ByName("name") != "" {
+		w.Write([]byte("Hello" + p.ByName("name")))
+		return
+	}
 	w.Write([]byte("Hello World"))
 }
